@@ -1,9 +1,43 @@
 <?php
 
-# PHP interface for IP weatherstations using the PWS protocol
-# by Christian C. Gruber <cg@chilia.com> 2017
+/*
+************************
+updateweatherstation.php
+************************
 
-# Protocol implemented from http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
+PHP script for reading data from IP weather stations using the PWS protocol
+by Christian C. Gruber <cg@chilia.com> 2017
+
+(f.i. Froggit WH3000 WiFi Internet Wetterstation - Froggit Wetterstationen)
+
+Features:
+
+* Especially useful for weather stations that do not allow upload to private servers (like WH3000)
+* Receivers data from webserver as $_GET array
+* Forwards data to external server (if $forward_data = 1)
+* Converts data to other units (°C, km/h, KTS, mm) if $convert_data = 1
+* Stores data in json format to text file (if $json_data_log = 1)
+* Stores data to dummy device in FHEM server (if $fhem_data_log = 1)
+* If $device = "auto", device name is extracted from weather station data stream 'ID' - supports multiple WS
+
+ToDo:
+
+* Create FHEM device only if not present
+* Save to SQL database
+* Check Weatherunderground if protocol contains reading for radiation
+* Double check conversion factors
+
+Usage:
+
+* Set your WS to upload to this script (e.g. http://192.168.1.1/updateweatherstation.php)
+* If not possible, redirect traffic from your WS to your web server (using firewall rules or modify DNS entry):
+    f.i. set rtupdate.wunderground.com to your webserver IP (for dnsmasq in /etc/hosts)
+
+Based on:
+
+Protocol description http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
+
+*/
 
 # Copyright (C) Christian C. Gruber
 #
@@ -124,23 +158,23 @@ if ( $json_data_log == 1 )
     fclose($file);
 }
 
-# Add settings, json and url string to array
-$weather_data['json'] = $weather_data_json;
-$weather_data['url'] = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
-$weather_data['settings_device'] = $device;
-$weather_data['settings_convert_data'] = $convert_data;
-$weather_data['settings_json_data_log'] = $json_data_log;
-$weather_data['settings_json_data_logdir'] = $json_data_logdir;
-$weather_data['settings_json_data_logfile'] = $json_data_logfile;
-$weather_data['settings_fhem_data_log'] = $fhem_data_log;
-$weather_data['settings_forward_data'] = $forward_data;
-$weather_data['settings_forward_server'] = $forward_server;
-$weather_data['settings_FHEM_server'] = $FHEM_server;
-$weather_data['settings_FHEM_port'] = $FHEM_port;
-
 # Write data to FHEM
 if ( $fhem_data_log == 1 ) 
 {
+    # Add settings, json and url string to array
+    $weather_data['json'] = $weather_data_json;
+    $weather_data['url'] = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+    $weather_data['settings_device'] = $device;
+    $weather_data['settings_convert_data'] = $convert_data;
+    $weather_data['settings_json_data_log'] = $json_data_log;
+    $weather_data['settings_json_data_logdir'] = $json_data_logdir;
+    $weather_data['settings_json_data_logfile'] = $json_data_logfile;
+    $weather_data['settings_fhem_data_log'] = $fhem_data_log;
+    $weather_data['settings_forward_data'] = $forward_data;
+    $weather_data['settings_forward_server'] = $forward_server;
+    $weather_data['settings_FHEM_server'] = $FHEM_server;
+    $weather_data['settings_FHEM_port'] = $FHEM_port;
+
     $FHEM_device = $device;
     
     $conn=fsockopen($FHEM_server,$FHEM_port);
